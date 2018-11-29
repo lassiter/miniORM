@@ -7,7 +7,7 @@ require 'miniorm/connection'
 
 module MiniORM
   class Base
-    extend Persistence
+    include Persistence
     extend Selection
     extend Schema
     extend Connection
