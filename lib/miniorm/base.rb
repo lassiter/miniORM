@@ -1,11 +1,14 @@
 require 'miniorm/utility'
 require 'miniorm/schema'
 require 'miniorm/persistence'
+require 'miniorm/selection'
 require 'miniorm/connection'
+
 
 module MiniORM
   class Base
     extend Persistence
+    extend Selection
     extend Schema
     extend Connection
 
