@@ -21,21 +21,25 @@ module Selection
       WHERE id = #{id};
     SQL
 
-    data = Hash[columns.zip(row)]
-    new(data)
+    init_object_from_row(row)
   end
 
   def find_by(attribute, value)
-    row = connection.get_first_row <<-SQL
+    rows = connection.execute <<-SQL
       SELECT #{columns.join ","} FROM #{table}
-      WHERE #{attribute} = #{value};
+      WHERE #{attribute} = #{MiniORM::Utility.sql_strings(value)};
     SQL
 
-    data = Hash[columns.zip(row)]
-    new(data)
+    rows_to_array(rows)
   end
   
   private
+  def init_object_from_row(row)
+    if row
+      data = Hash[columns.zip(row)]
+      new(data)
+    end
+  end
 
   def rows_to_array(rows)
     rows.map { |row| new(Hash[columns.zip(row)]) }
