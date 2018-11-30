@@ -98,6 +98,23 @@ module Selection
     rows_to_array(rows)
   end
 
+  def method_missing(m, *args)
+    begin
+      if m.to_s.include?("find_by_")
+        attribute = m.match(/find_by_?(.*)/)[1]
+        if schema.keys.include?(attribute)
+          return find_by(attribute, args[0])
+        else
+          raise NoMethodError
+        end
+      else
+        raise NoMethodError
+      end
+    rescue NoMethodError
+      return "There's no method called #{m} here -- please try again."  
+    end
+  end  
+
   private
   def init_object_from_row(row)
     if row
@@ -115,14 +132,18 @@ module Selection
   end
 
   def validate_find_by(attribute, value)
-    if schema["#{attribute}"].include?("VARCHAR")
-      varchar_count = schema["#{attribute}"].match(/[0-9]+/)[0].to_i
-      return false if value.length > varchar_count || value.length == 0
-      true
-    elsif schema["#{attribute}"] = "INTEGER"
-      validate_number(value)
-    else
-      false
+    begin
+      return false unless schema.keys.include?(attribute.to_s)
+      if schema["#{attribute}"].include?("VARCHAR")
+        varchar_count = schema["#{attribute}"].match(/[0-9]+/)[0].to_i
+        return false if value.length > varchar_count || value.length == 0
+        true
+      elsif schema["#{attribute}"] = "INTEGER"
+        validate_number(value)
+      else
+        false
+      end
+    rescue
     end
   end
 
