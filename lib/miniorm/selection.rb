@@ -1,17 +1,22 @@
 
 require 'sqlite3'
-
+require 'pry'
 module Selection
   def find(*ids)
-    if ids.length == 1
-      find_one(ids.first)
-    else
-      rows = connection.execute <<-SQL
-        SELECT #{columns.join ","} FROM #{table}
-        WHERE id IN (#{ids.join(",")});
-      SQL
+    begin
+      raise ArgumentError, 'Argument is not numeric' unless validate_number(ids)
+      if ids.length == 1
+        find_one(ids.first)
+      else
+        rows = connection.execute <<-SQL
+          SELECT #{columns.join ","} FROM #{table}
+          WHERE id IN (#{ids.join(",")});
+        SQL
 
-      rows_to_array(rows)
+        rows_to_array(rows)
+      end
+    rescue ArgumentError
+      return "#{ids} contains an invalid input."
     end
   end
 
@@ -25,25 +30,35 @@ module Selection
   end
 
   def find_by(attribute, value)
-    rows = connection.execute <<-SQL
-      SELECT #{columns.join ","} FROM #{table}
-      WHERE #{attribute} = #{MiniORM::Utility.sql_strings(value)};
-    SQL
-
-    rows_to_array(rows)
-  end
-
-  def take(num=1)
-    if num > 1
+    begin
+      raise ArgumentError, 'Argument value does not match attribute type' unless validate_find_by(attribute, value)
       rows = connection.execute <<-SQL
         SELECT #{columns.join ","} FROM #{table}
-        ORDER BY random()
-        LIMIT #{num};
+        WHERE #{attribute} = #{MiniORM::Utility.sql_strings(value)};
       SQL
 
       rows_to_array(rows)
-    else
-      take_one
+    rescue ArgumentError
+      return "#{value} is an invalid input."
+    end
+  end
+
+  def take(num=1)
+    begin
+      raise RangeError if num > count
+      if num > 1
+        rows = connection.execute <<-SQL
+          SELECT #{columns.join ","} FROM #{table}
+          ORDER BY random()
+          LIMIT #{num};
+        SQL
+
+        rows_to_array(rows)
+      else
+        take_one
+      end
+    rescue RangeError
+      return "Argument exceeds range of rows. Request (#{num}) is greater than number of rows (#{count})."
     end
   end
 
@@ -94,4 +109,21 @@ module Selection
   def rows_to_array(rows)
     rows.map { |row| new(Hash[columns.zip(row)]) }
   end
+
+  def validate_number(*num)
+    num.any? { |value| !value.is_a?(Numeric || Integer) }
+  end
+
+  def validate_find_by(attribute, value)
+    if schema["#{attribute}"].include?("VARCHAR")
+      varchar_count = schema["#{attribute}"].match(/[0-9]+/)[0].to_i
+      return false if value.length > varchar_count || value.length == 0
+      true
+    elsif schema["#{attribute}"] = "INTEGER"
+      validate_number(value)
+    else
+      false
+    end
+  end
+
 end

@@ -23,6 +23,7 @@ module Schema
   def attributes
     columns - ["id"]
   end
+  
   def count
     connection.execute(<<-SQL)[0][0]
       SELECT COUNT(*) FROM #{table}
