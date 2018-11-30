@@ -20,6 +20,54 @@ module Selection
     end
   end
 
+  def find_each(start=first.address_book_id,batch=100)
+    begin
+      binding.pry
+      rows = connection.execute <<-SQL
+        SELECT #{columns.join ","} 
+        FROM #{table}
+        WHERE id >= #{start}
+        ORDER BY id ASC
+        LIMIT #{batch};
+      SQL
+
+      rows_to_array(rows)
+    end
+  end
+
+  def find_in_batches(start=first.address_book_id,batch=100)
+    begin
+        rows = connection.execute <<-SQL
+          SELECT #{columns.join ","} 
+          FROM #{table}
+          WHERE id >= #{start}
+          ORDER BY id ASC
+          LIMIT #{batch};
+        SQL
+        if block_given?
+          yield rows_to_array(rows)
+        else
+          rows_to_array(rows)
+        end
+      increment = 1
+      while (increment * batch) < count
+        rows = connection.execute <<-SQL
+          SELECT #{columns.join ","} 
+          FROM #{table}
+          WHERE id >= #{increment*batch}
+          ORDER BY id ASC
+          LIMIT #{batch};
+        SQL
+        if block_given?
+          yield rows_to_array(rows)
+        else
+          rows_to_array(rows)
+        end
+        increment = increment + 1
+      end
+    end
+  end
+
   def find_one(id)
     row = connection.get_first_row <<-SQL
       SELECT #{columns.join ","} FROM #{table}
