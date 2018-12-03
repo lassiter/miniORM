@@ -20,29 +20,26 @@ module Selection
     end
   end
 
-  def find_each(start=first.address_book_id,batch=100)
+  def find_each(start=0,batch=100)
     begin
-      binding.pry
       rows = connection.execute <<-SQL
         SELECT #{columns.join ","} 
         FROM #{table}
-        WHERE id >= #{start}
         ORDER BY id ASC
-        LIMIT #{batch};
+        LIMIT #{batch} OFFSET #{start};
       SQL
 
       rows_to_array(rows)
     end
   end
 
-  def find_in_batches(start=first.address_book_id,batch=100)
+  def find_in_batches(start=0,batch=100)
     begin
         rows = connection.execute <<-SQL
           SELECT #{columns.join ","} 
           FROM #{table}
-          WHERE id >= #{start}
           ORDER BY id ASC
-          LIMIT #{batch};
+          LIMIT #{batch} OFFSET #{start};
         SQL
         if block_given?
           yield rows_to_array(rows)
