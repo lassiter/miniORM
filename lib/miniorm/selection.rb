@@ -199,6 +199,12 @@ module Selection
     rows_to_array(rows)
   end
 
+  def join(sql_string)
+    rows = connection.execute <<-SQL
+      SELECT * FROM #{table} #{MiniORM::Utility.sql_strings(sql_string)};
+    SQL
+    rows_to_array(rows)
+  end
 
   private
   def init_object_from_row(row)
