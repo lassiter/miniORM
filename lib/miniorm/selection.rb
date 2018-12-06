@@ -183,6 +183,22 @@ module Selection
     rows = connection.execute(sql, params)
     rows_to_array(rows)
   end
+  
+  def order(*args)
+    if args.count > 1
+      order = args.join(",")
+    else
+      order = args.first.to_s
+    end
+    
+    rows = connection.execute <<-SQL
+      SELECT * FROM #{table}
+      ORDER BY #{order};
+    SQL
+
+    rows_to_array(rows)
+  end
+
 
   private
   def init_object_from_row(row)
