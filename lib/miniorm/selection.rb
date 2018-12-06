@@ -160,6 +160,30 @@ module Selection
     end
   end  
 
+
+  def where(*args)
+    if args.count > 1
+      expression = args.shift
+      params = args
+    else
+    case args.first
+    when String
+      expression = args.first
+    when Hash
+      expression_hash = MiniORM::Utility.convert_keys(args.first)
+      expression = expression_hash.map {|key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}"}.join(" and ")
+      end
+    end
+
+    sql = <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      WHERE #{expression};
+    SQL
+
+    rows = connection.execute(sql, params)
+    rows_to_array(rows)
+  end
+
   private
   def init_object_from_row(row)
     if row
