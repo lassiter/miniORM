@@ -228,6 +228,7 @@ module Selection
 
   def join(*args)
     if args.count > 1
+      
       joins = args.map { |arg| "INNER JOIN #{arg} ON #{arg}.#{table}_id = #{table}.id"}.join(" ")
       rows = connection.execute <<-SQL
         SELECT * FROM #{table} #{joins}
@@ -242,6 +243,20 @@ module Selection
         rows = connection.execute <<-SQL
           SELECT * FROM #{table}
           INNER JOIN #{args.first} ON #{args.first}.#{table}_id = #{table}.id
+        SQL
+      when Hash
+        args = args.first.flatten.map &:to_s
+        joins = []
+        args.each_with_index do |arg, i|
+          if i === 0
+            joins << "INNER JOIN #{arg} ON #{arg}.#{table}_id = #{table}.id"
+          else
+            joins << "INNER JOIN #{args[i]} ON #{args[i]}.#{args[i-1]}_id = #{args[i-1]}.id"
+          end
+        end
+        joins = joins.join(" ")
+        rows = connection.execute <<-SQL
+          SELECT * FROM #{table} #{joins}
         SQL
       end
     end
