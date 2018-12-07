@@ -186,11 +186,38 @@ module Selection
   
   def order(*args)
     if args.count > 1
-      order = args.join(",")
+      order = {}
+      args.each do |arg|
+        case arg
+        when Hash
+          order = order.merge(arg)
+        when Symbol
+          order[arg] = :asc
+        when String
+          str = arg.split(" ")
+          order[str[0].to_sym] = str[1].downcase.to_sym
+        end
+      end
+    elsif !args[0].is_a?(Symbol)
+      if args[0].include?(",")
+        order = {}
+        args = args[0].split(",")
+        args.each do |arg|
+          arg = arg.gsub(/(^\s)|[:]/, "")
+          str = arg.split(" ")
+          order[str[0].to_sym] = str[1].downcase.to_sym
+        end
+      end
     else
       order = args.first.to_s
     end
-    
+    unless order.is_a?(String)
+      # gsub is a two step conversion, first removing {}:= and whitespace
+      # then it swaps > with empty whitespace
+      # i.e. {:name=>:asc, :phone_number=>:desc}
+      # to:  "name asc, phone_number desc"
+      order = order.to_s.gsub(/(^\s|{)|[:=]|(}$)/, "").gsub(/[>]/, " ")
+    end
     rows = connection.execute <<-SQL
       SELECT * FROM #{table}
       ORDER BY #{order};
