@@ -32,6 +32,10 @@ module Persistence
     self.class.update(self.id, { attribute => value })
   end
 
+  def update_attributes(updates)
+    self.class.update(self.id, updates)
+  end
+
   module ClassMethods
     def create(attrs)
       attrs = MiniORM::Utility.convert_keys(attrs)
