@@ -28,6 +28,10 @@ module Persistence
     true
   end
 
+  def update_attribute(attribute, value)
+    self.class.update(self.id, { attribute => value })
+  end
+
   module ClassMethods
     def create(attrs)
       attrs = MiniORM::Utility.convert_keys(attrs)
@@ -43,5 +47,21 @@ module Persistence
       data["id"] = connection.execute("SELECT last_insert_rowid();")[0][0]
       new(data)
     end
+
+    def update(id, updates)
+
+      updates = MiniORM::Utility.convert_keys(updates)
+      updates.delete "id"
+      updates_array = updates.map { |key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}" }
+
+      connection.execute <<-SQL
+        UPDATE #{table}
+        SET #{updates_array * ","}
+        WHERE id = #{id};
+      SQL
+
+      true
+    end
+
   end
 end
