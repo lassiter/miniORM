@@ -53,6 +53,9 @@ module Persistence
     end
 
     def update(ids, updates)
+      unless ids.is_a?(Array)
+        ids = [ids]
+      end
       if ids.count >= 2 && ids.count === updates.count && ids.is_a?(Array) && updates.is_a?(Array)
         updates_array = []
         updates.each_with_index do |update_array_item, index| 
@@ -66,7 +69,6 @@ module Persistence
       end
 
       if ids.count >= 2
-        set_where_sql_strings = []
         updates_array.each do |convert_keys|
           next if convert_keys[0].class != Integer
           where_statement = "WHERE id = #{convert_keys.shift(1)[0].to_s}"
@@ -76,14 +78,7 @@ module Persistence
           SQL
         end
       else
-        
-        if ids.class == Fixnum
-          where_clause = "WHERE id = #{ids};"
-        elsif ids.class == Array
-          where_clause = ids.empty? ? ";" : "WHERE id IN (#{ids.join(",")});"
-        else
-          where_clause = ";"
-        end
+        where_clause = ids.empty? ? ";" : "WHERE id IN (#{ids.join(",")});"
 
         connection.execute <<-SQL
           UPDATE #{table}
@@ -97,6 +92,5 @@ module Persistence
     def update_all(updates)
       update(nil, updates)
     end
-
   end
 end

@@ -153,6 +153,13 @@ module Selection
         else
           raise NoMethodError
         end
+      elsif m.to_s.include?("update_")
+        attribute = m.match(/update_?(.*)/)[1]
+        if schema.keys.include?(attribute)
+          return update(args[0], {attribute => args[1]})
+        else
+          raise NoMethodError
+        end
       else
         raise NoMethodError
       end
@@ -295,7 +302,6 @@ module Selection
       else
         false
       end
-    rescue
     end
   end
 
