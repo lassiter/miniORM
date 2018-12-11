@@ -3,6 +3,7 @@ require 'miniorm/schema'
 require 'miniorm/persistence'
 require 'miniorm/selection'
 require 'miniorm/connection'
+require 'miniorm/collection'
 
 
 module MiniORM
