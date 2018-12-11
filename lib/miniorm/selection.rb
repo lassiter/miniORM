@@ -4,6 +4,7 @@ require 'pry'
 module Selection
   def find(*ids)
     begin
+      ids = ids.flatten
       raise ArgumentError, 'Argument is not numeric' unless validate_number(ids)
       if ids.length == 1
         find_one(ids.first)

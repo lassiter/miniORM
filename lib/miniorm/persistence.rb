@@ -53,23 +53,43 @@ module Persistence
     end
 
     def update(ids, updates)
-
-      updates = MiniORM::Utility.convert_keys(updates)
-      updates.delete "id"
-      updates_array = updates.map { |key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}" }
-
-      if ids.class == Fixnum
-        where_clause = "WHERE id = #{ids};"
-      elsif ids.class == Array
-        where_clause = ids.empty? ? ";" : "WHERE id IN (#{ids.join(",")});"
+      if ids.count >= 2 && ids.count === updates.count && ids.is_a?(Array) && updates.is_a?(Array)
+        updates_array = []
+        updates.each_with_index do |update_array_item, index| 
+          converted_keys = MiniORM::Utility.convert_keys(update_array_item)
+          updates_array << converted_keys.map { |key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}" }.unshift(ids[index])
+        end
       else
-        where_clause = ";"
+        updates = MiniORM::Utility.convert_keys(updates)
+        updates.delete "id"
+        updates_array = updates.map { |key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}" }
       end
 
-      connection.execute <<-SQL
-        UPDATE #{table}
-        SET #{updates_array * ","} #{where_clause}
-      SQL
+      if ids.count >= 2
+        set_where_sql_strings = []
+        updates_array.each do |convert_keys|
+          next if convert_keys[0].class != Integer
+          where_statement = "WHERE id = #{convert_keys.shift(1)[0].to_s}"
+          connection.execute <<-SQL
+            UPDATE #{table}
+            SET #{convert_keys * ","} #{where_statement};
+          SQL
+        end
+      else
+        
+        if ids.class == Fixnum
+          where_clause = "WHERE id = #{ids};"
+        elsif ids.class == Array
+          where_clause = ids.empty? ? ";" : "WHERE id IN (#{ids.join(",")});"
+        else
+          where_clause = ";"
+        end
+
+        connection.execute <<-SQL
+          UPDATE #{table}
+          SET #{updates_array * ","} #{where_clause}
+        SQL
+      end
 
       true
     end
