@@ -111,5 +111,13 @@ module Persistence
 
       true
     end
+    
+    def destroy_all
+      connection.execute <<-SQL
+        DELETE FROM #{table}
+      SQL
+
+      true
+    end
   end
 end
