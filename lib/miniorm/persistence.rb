@@ -98,6 +98,7 @@ module Persistence
     end
     
     def destroy(*id)
+      id = id.flatten
       if id.length > 1
         where_clause = "WHERE id IN (#{id.join(",")});"
       else
@@ -112,7 +113,6 @@ module Persistence
     end
     
     def destroy_all(arg = nil)
-      binding.pry
       if arg.is_a?(Hash)
         conditions_hash = MiniORM::Utility.convert_keys(conditions_hash)
         conditions = conditions_hash.map {|key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}"}.join(" and ")

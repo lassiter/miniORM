@@ -26,5 +26,10 @@ module MiniORM
         self.first
       end
     end
+
+    def destroy_all
+      ids = self.map(&:id)
+      self.any? ? self.first.class.destroy(ids) : false
+    end
   end
 end
