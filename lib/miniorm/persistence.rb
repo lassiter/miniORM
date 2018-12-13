@@ -111,12 +111,18 @@ module Persistence
       true
     end
     
-    def destroy_all(conditions_hash=nil, *arg)
+    def destroy_all(arg = nil)
       binding.pry
-      if conditions_hash && !conditions_hash.empty?
-        conditions_hash = BlocRecord::Utility.convert_keys(conditions_hash)
-        conditions = conditions_hash.map {|key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+      if arg.is_a?(Hash)
+        conditions_hash = MiniORM::Utility.convert_keys(conditions_hash)
+        conditions = conditions_hash.map {|key, value| "#{key}=#{MiniORM::Utility.sql_strings(value)}"}.join(" and ")
+      elsif arg.is_a?(Array)
+        conditions = arg.join("=")
+      elsif arg.is_a?(String)
+        conditions = arg.to_s
+      end
 
+      if conditions
         connection.execute <<-SQL
           DELETE FROM #{table}
           WHERE #{conditions};
