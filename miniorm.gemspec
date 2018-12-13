@@ -12,5 +12,6 @@
      'http://rubygems.org/gems/miniORM'
    s.license       = 'MIT'
    s.add_runtime_dependency 'sqlite3', '~> 1.3'
+   s.add_runtime_dependency 'activesupport'
    s.add_runtime_dependency 'pry'
  end

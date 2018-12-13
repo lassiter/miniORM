@@ -4,6 +4,7 @@ require 'miniorm/persistence'
 require 'miniorm/selection'
 require 'miniorm/connection'
 require 'miniorm/collection'
+require 'miniorm/associations'
 
 
 module MiniORM
@@ -12,6 +13,7 @@ module MiniORM
     extend Selection
     extend Schema
     extend Connection
+    extend Associations
 
     def initialize(options={})
       options = MiniORM::Utility.convert_keys(options)
